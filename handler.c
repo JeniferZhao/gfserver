@@ -98,9 +98,7 @@ static void *worker_main(void *arg) {
         pthread_mutex_unlock(&q_mtx);
         if (!req) continue;
 
-        /* Create a local pointer-to-pointer wrapper for the library */
-        gfcontext_t *c = req->ctx;   /* single pointer captured in handler */
-        (void) serve_file(&c, req->filepath);
+        (void) serve_file(req->ctx, req->filepath);
 
         /* cleanup */
         free(req->filepath);
@@ -151,7 +149,7 @@ void cleanup_threads(void) {
     pthread_cond_destroy(&q_cv);
 }
 
-/* Handler: capture the context VALUE, null-out *ctx, enqueue, return success */
+/* Handler: capture the library context pointer, enqueue, return success */
 gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
     (void)arg;
 
@@ -162,8 +160,8 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         return gfh_failure;
     }
 
-    /* CRITICAL: store the SINGLE pointer value, not the address to it */
-    req->ctx = *ctx;
+    /* Store the pointer-to-pointer handed to us by the library thread */
+    req->ctx = ctx;
     req->filepath = strdup(path ? path : "/");
     if (!req->filepath) {
         free(req);
@@ -171,9 +169,6 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         gfs_abort(ctx);
         return gfh_failure;
     }
-
-    /* Transfer ownership to us before returning to the library thread */
-    *ctx = NULL;
 
     pthread_mutex_lock(&q_mtx);
     steque_enqueue(&queue, (steque_item) req);
