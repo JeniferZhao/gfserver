@@ -97,19 +97,17 @@ static void *worker_main(void *arg) {
         steque_request *req = (steque_request *) steque_pop(&queue);
         pthread_mutex_unlock(&q_mtx);
         if (!req) continue;
-
-        gfcontext_t **ctxpp = req->ctx_slot;
+        gfcontext_t **ctxpp = req->ctx_holder;
         if (ctxpp != NULL) {
-            *ctxpp = req->ctx;
             (void) serve_file(ctxpp, req->filepath);
             *ctxpp = NULL;
+            free(ctxpp);
+            req->ctx_holder = NULL;
         }
 
         /* cleanup */
         free(req->filepath);
         req->filepath = NULL;
-        req->ctx = NULL;
-        req->ctx_slot = NULL;
         free(req);
     }
     return NULL;
@@ -148,15 +146,14 @@ void cleanup_threads(void) {
     while (!steque_isempty(&queue)) {
         steque_request *r = (steque_request *) steque_pop(&queue);
         if (r) {
-            if (r->ctx_slot != NULL) {
-                *(r->ctx_slot) = r->ctx;
-                gfs_abort(r->ctx_slot);
-                *(r->ctx_slot) = NULL;
+            if (r->ctx_holder != NULL) {
+                gfs_abort(r->ctx_holder);
+                *(r->ctx_holder) = NULL;
+                free(r->ctx_holder);
+                r->ctx_holder = NULL;
             }
             free(r->filepath);
             r->filepath = NULL;
-            r->ctx = NULL;
-            r->ctx_slot = NULL;
             free(r);
         }
     }
@@ -165,8 +162,6 @@ void cleanup_threads(void) {
     pthread_mutex_destroy(&q_mtx);
     pthread_cond_destroy(&q_cv);
 }
-
-/* Handler: capture the library context pointer, enqueue, return success */
 gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
     (void)arg;
 
@@ -176,9 +171,6 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         gfs_abort(ctx);
         return gfh_failure;
     }
-
-
-    req->ctx = ctx;
     req->filepath = strdup(path ? path : "/");
     if (!req->filepath) {
         free(req);
@@ -187,10 +179,18 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         return gfh_failure;
     }
 
+    req->ctx_holder = (gfcontext_t **) calloc(1, sizeof(gfcontext_t *));
+    if (!req->ctx_holder) {
+        free(req->filepath);
+        free(req);
+        (void) gfs_sendheader(ctx, GF_ERROR, 0);
+        gfs_abort(ctx);
+        return gfh_failure;
+    }
+    *(req->ctx_holder) = *ctx;
 
-    req->ctx = *ctx;
-    req->ctx_slot = ctx;
-
+    /* Detach from the library thread context before returning */
+    *ctx = NULL;
     /* Detach from the library thread context before returning */
     *ctx = NULL;
     pthread_mutex_lock(&q_mtx);
