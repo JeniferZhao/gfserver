@@ -177,6 +177,8 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         return gfh_failure;
     }
 
+
+    req->ctx = ctx;
     req->filepath = strdup(path ? path : "/");
     if (!req->filepath) {
         free(req);
@@ -185,12 +187,12 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         return gfh_failure;
     }
 
+
     req->ctx = *ctx;
     req->ctx_slot = ctx;
 
     /* Detach from the library thread context before returning */
     *ctx = NULL;
-
     pthread_mutex_lock(&q_mtx);
     steque_enqueue(&queue, (steque_item) req);
     pthread_cond_signal(&q_cv);
