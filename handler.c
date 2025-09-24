@@ -98,12 +98,18 @@ static void *worker_main(void *arg) {
         pthread_mutex_unlock(&q_mtx);
         if (!req) continue;
 
-        (void) serve_file(req->ctx, req->filepath);
+        gfcontext_t **ctxpp = req->ctx_slot;
+        if (ctxpp != NULL) {
+            *ctxpp = req->ctx;
+            (void) serve_file(ctxpp, req->filepath);
+            *ctxpp = NULL;
+        }
 
         /* cleanup */
         free(req->filepath);
         req->filepath = NULL;
         req->ctx = NULL;
+        req->ctx_slot = NULL;
         free(req);
     }
     return NULL;
@@ -141,7 +147,18 @@ void cleanup_threads(void) {
 
     while (!steque_isempty(&queue)) {
         steque_request *r = (steque_request *) steque_pop(&queue);
-        if (r) { free(r->filepath); free(r); }
+        if (r) {
+            if (r->ctx_slot != NULL) {
+                *(r->ctx_slot) = r->ctx;
+                gfs_abort(r->ctx_slot);
+                *(r->ctx_slot) = NULL;
+            }
+            free(r->filepath);
+            r->filepath = NULL;
+            r->ctx = NULL;
+            r->ctx_slot = NULL;
+            free(r);
+        }
     }
     steque_destroy(&queue);
 
@@ -160,7 +177,7 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         return gfh_failure;
     }
 
-    /* Store the pointer-to-pointer handed to us by the library thread */
+
     req->ctx = ctx;
     req->filepath = strdup(path ? path : "/");
     if (!req->filepath) {
@@ -170,6 +187,12 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         return gfh_failure;
     }
 
+
+    req->ctx = *ctx;
+    req->ctx_slot = ctx;
+
+    /* Detach from the library thread context before returning */
+    *ctx = NULL;
     pthread_mutex_lock(&q_mtx);
     steque_enqueue(&queue, (steque_item) req);
     pthread_cond_signal(&q_cv);
