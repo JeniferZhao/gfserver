@@ -97,7 +97,6 @@ static void *worker_main(void *arg) {
         steque_request *req = (steque_request *) steque_pop(&queue);
         pthread_mutex_unlock(&q_mtx);
         if (!req) continue;
-
         gfcontext_t **ctxpp = req->ctx_holder;
         if (ctxpp != NULL) {
             (void) serve_file(ctxpp, req->filepath);
@@ -163,8 +162,6 @@ void cleanup_threads(void) {
     pthread_mutex_destroy(&q_mtx);
     pthread_cond_destroy(&q_cv);
 }
-
-/* Handler: capture the library context pointer, enqueue, return success */
 gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
     (void)arg;
 
@@ -174,7 +171,6 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
         gfs_abort(ctx);
         return gfh_failure;
     }
-
     req->filepath = strdup(path ? path : "/");
     if (!req->filepath) {
         free(req);
@@ -195,7 +191,8 @@ gfh_error_t gfs_handler(gfcontext_t **ctx, const char *path, void *arg) {
 
     /* Detach from the library thread context before returning */
     *ctx = NULL;
-
+    /* Detach from the library thread context before returning */
+    *ctx = NULL;
     pthread_mutex_lock(&q_mtx);
     steque_enqueue(&queue, (steque_item) req);
     pthread_cond_signal(&q_cv);
