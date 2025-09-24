@@ -1,0 +1,42 @@
+Requesting 127.0.0.1/courses/ud923/filecorpus/road.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/road.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/moranabovejacksonlake.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/paraglider.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/yellowstone.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/paraglider.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/moranabovejacksonlake.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/yellowstone.jpg
+Status: OK
+Received 138177 of 138177 bytes
+Requesting 127.0.0.1/courses/ud923/filecorpus/road.jpg
+gfc_perform returned an error -1
+gfc_perform returned an error -1
+gfc_perform returned an error -1
+gfc_perform returned an error -1
+gfc_perform returned an error -1
+gfc_perform returned an error -1
+gfc_perform returned an error -1
+gfc_perform returned an error -1
+Status: INVALID
+Received 0 of 0 bytes
+Status: INVALID
+Received 0 of 0 bytes
+Status: INVALID
+Received 0 of 0 bytes
+Requesting 127.0.0.1/courses/ud923/filecorpus/paraglider.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/yellowstone.jpg
+Status: INVALID
+Received 0 of 0 bytes
+Status: INVALID
+Received 0 of 0 bytes
+Status: INVALID
+Received 0 of 0 bytes
+Requesting 127.0.0.1/courses/ud923/filecorpus/moranabovejacksonlake.jpg
+Status: INVALID
+Received 0 of 0 bytes
+Requesting 127.0.0.1/courses/ud923/filecorpus/road.jpg
+Status: INVALID
+Received 0 of 0 bytes
+Requesting 127.0.0.1/courses/ud923/filecorpus/moranabovejacksonlake.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/paraglider.jpg
+Requesting 127.0.0.1/courses/ud923/filecorpus/yellowstone.jpg

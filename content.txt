@@ -1,0 +1,1 @@
+/test.bin server_root/test.bin
