@@ -11,7 +11,7 @@
 typedef struct steque_request {
     char *filepath;        /* heap-allocated copy of the requested path */
     void *arg;             /* optional / unused */
-    gfcontext_t *ctx;      /* IMPORTANT: store the SINGLE pointer value */
+    gfcontext_t **ctx;     /* Pointer provided by the library */
 } steque_request;
 
 void set_pthreads(size_t nthreads);
