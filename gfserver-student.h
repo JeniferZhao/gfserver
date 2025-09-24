@@ -9,9 +9,9 @@
 
 /* Request object stored on the work queue */
 typedef struct steque_request {
-    char *filepath;        /* heap-allocated copy of the requested path */
-    void *arg;             /* optional / unused */
-    gfcontext_t *ctx;      /* IMPORTANT: store the SINGLE pointer value */
+    char *filepath;          /* heap-allocated copy of the requested path */
+    void *arg;               /* optional / unused */
+    gfcontext_t **ctx_holder;/* pointer to heap storage for gfcontext */
 } steque_request;
 
 void set_pthreads(size_t nthreads);
